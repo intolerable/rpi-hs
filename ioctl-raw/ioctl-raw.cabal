@@ -1,0 +1,45 @@
+cabal-version: 3.0
+name: ioctl-raw
+version: 0.1.0
+license: NONE
+build-type: Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+  ghc-options: -Wall -Wextra -Wcompat
+
+common language
+  default-language: Haskell2010
+  default-extensions:
+    CApiFFI
+    DataKinds
+    ForeignFunctionInterface
+    GeneralizedNewtypeDeriving
+    KindSignatures
+    PatternSynonyms
+    ViewPatterns
+
+library
+  import: warnings
+  import: language
+
+  exposed-modules:
+    IOCtl.Raw
+  build-depends:
+    base >= 4.14 && < 5,
+  hs-source-dirs: src
+
+test-suite ioctl-spec
+  import: warnings
+  import: language
+
+  type: exitcode-stdio-1.0
+  hs-source-dirs: spec
+  main-is: Main.hs
+  other-modules:
+    IOCtl.RawSpec
+  build-tool-depends: hspec-discover:hspec-discover
+  build-depends:
+    base,
+    ioctl-raw,
+    hspec,

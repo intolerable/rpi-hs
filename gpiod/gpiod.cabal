@@ -1,0 +1,114 @@
+cabal-version: 3.0
+name: gpiod
+version: 0.1.0.0
+license: NONE
+build-type: Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+  ghc-options: -Wall -Wextra -Wcompat
+
+common language
+  default-language: Haskell2010
+  default-extensions:
+    BlockArguments
+    ConstraintKinds
+    DataKinds
+    DeriveGeneric
+    DuplicateRecordFields
+    FlexibleContexts
+    FlexibleInstances
+    GADTs
+    GeneralizedNewtypeDeriving
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    OverloadedStrings
+    ScopedTypeVariables
+    StandaloneDeriving
+    StrictData
+    TypeOperators
+    UndecidableInstances
+
+library
+  import: warnings
+  import: language
+
+  exposed-modules:
+    System.IO.GPIOD
+    System.IO.GPIOD.Chip
+    System.IO.GPIOD.Chip.Internal
+    System.IO.GPIOD.Error
+    System.IO.GPIOD.Line
+    System.IO.GPIOD.Line.Internal
+    System.IO.GPIOD.LineEvent
+    System.IO.GPIOD.LineRequest
+    System.IO.GPIOD.LineRequest.Bias
+    System.IO.GPIOD.LineRequest.Drive
+    System.IO.GPIOD.LineRequest.EdgeDetection
+    System.IO.GPIOD.LineRequest.RequestType
+    System.IO.GPIOD.ReservedLine
+  build-depends:
+    base >= 4.14 && < 5,
+    libgpiod,
+    async,
+    clock,
+    sop-core,
+    stm,
+    streaming,
+    text >= 2.1.2,
+  hs-source-dirs: src
+
+executable gpiod-example
+  import: warnings
+  import: language
+
+  hs-source-dirs: example
+  main-is: Main.hs
+  other-modules:
+    BitVec
+    SPI
+  ghc-options: -threaded -rtsopts
+  default-extensions:
+    BinaryLiterals
+    NumericUnderscores
+    TypeApplications
+  build-depends:
+    base,
+    gpiod,
+    bitvec,
+    bytestring,
+    JuicyPixels,
+    streaming,
+    spidev,
+    stm,
+    text,
+    transformers,
+    vector,
+
+test-suite gpiod-spec
+  import: warnings
+  import: language
+
+  type: exitcode-stdio-1.0
+  hs-source-dirs: spec
+  main-is: Main.hs
+  ghc-options: -threaded -rtsopts
+  other-modules:
+    System.IO.GPIODSpec
+    System.IO.GPIOD.ChipSpec
+    System.IO.GPIOD.Gen
+    System.IO.GPIOD.LineSpec
+    System.IO.GPIOD.LineRequestSpec
+    System.IO.GPIOD.TestUtils
+  build-tool-depends: hspec-discover:hspec-discover
+  build-depends:
+    base,
+    gpiod,
+    gpio-sim,
+    containers,
+    hedgehog,
+    hspec,
+    hspec-hedgehog,
+    streaming,
+    text,

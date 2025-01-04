@@ -1,0 +1,15 @@
+packages:
+  libgpiod
+  gpiod
+  gpio-sim
+  spidev
+  ioctl-raw
+
+jobs: $ncpus
+
+tests: True
+test-options:
+  "--color"
+  "--diff"
+  "--format=specdoc"
+test-show-details: streaming
