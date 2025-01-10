@@ -2,7 +2,7 @@ module Main where
 
 import Test.Hspec
 
-import qualified IOCtl.RawSpec
+import qualified System.IO.IOCtl.RawSpec
 
 main :: IO ()
 main = hspec spec
@@ -10,4 +10,4 @@ main = hspec spec
 spec :: Spec
 spec = do
 
-  describe "IOCtl.RawSpec" IOCtl.RawSpec.spec
+  describe "IOCtl.RawSpec" System.IO.IOCtl.RawSpec.spec

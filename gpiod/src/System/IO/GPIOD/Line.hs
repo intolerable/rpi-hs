@@ -34,7 +34,7 @@ import Streaming (Stream, Of, MonadIO(..))
 import qualified Data.Text.Foreign as Text.Foreign
 import qualified Streaming.Prelude as S
 
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 import System.IO.GPIOD.Chip.Internal (Chip, withChipPtr, unsafeMkChip, ChipOwned, mkChipOwned, withChipOwned)
 import System.IO.GPIOD.Error
 

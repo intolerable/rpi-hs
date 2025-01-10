@@ -24,7 +24,8 @@ library
   import: language
 
   exposed-modules:
-    SPIDev
+    System.IO.SPIDev
+    System.IO.SPIDev.Raw
   build-depends:
     base >= 4.14 && < 5,
     ioctl-raw,
@@ -38,7 +39,7 @@ test-suite spidev-spec
   hs-source-dirs: spec
   main-is: Main.hs
   other-modules:
-    SPIDevSpec
+    System.IO.SPIDevSpec
   build-tool-depends: hspec-discover:hspec-discover
   build-depends:
     base,

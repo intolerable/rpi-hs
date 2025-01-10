@@ -1,5 +1,7 @@
 module Main where
 
+import Data.Maybe
+import Data.Semigroup (Arg(..), Min(..))
 import Codec.Picture
 import Codec.Picture.Types
 import Control.Concurrent
@@ -28,6 +30,7 @@ import qualified Data.Vector as Vector
 import qualified Data.Vector.Mutable as MV
 import qualified Data.Vector.Storable as SV
 import qualified GHC.IO.FD as FD
+import qualified Data.Map.Strict as Map
 
 import BitVec
 import SPI (SPI)
@@ -175,30 +178,35 @@ mainLoop disp = do
   _ <- sendCommand disp PFS $ NByteString $ ByteString.singleton 0
 
   putStrLn "DTM1"
-  _ <- sendCommand disp DTM1 $ NByteString @128000 pixelBS
-  _ <- sendCommand disp DTM1 $ NByteString @256000 (pixelBS <> pixelBS)
+  _ <- sendCommand disp DTM1 $ NByteString @143360 $ do
+    let l = ByteString.length pixelBS
+        diff = 143_360 - l
+    pixelBS <> ByteString.replicate diff 0
   -- _ <- sendCommand disp DTM1 $ NByteString @128000 $ ByteString.replicate 128000 0b00010001
   -- threadDelay 1_000_000
 
-  -- putStrLn "DSP"
-  -- NByteString dspBS <- sendCommand disp DSP (NByteString mempty)
-  -- print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack dspBS
+  putStrLn "DSP"
+  NByteString dspBS <- sendCommand disp DSP (NByteString mempty)
+  print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack dspBS
 
-  putStrLn "FLG"
-  NByteString flgBS <- sendCommand disp FLG (NByteString mempty)
-  print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack flgBS
+  -- putStrLn "IPC"
+  -- _ <- sendCommand disp IPC $ NByteString $ ByteString.singleton 0b10100
+
+  -- putStrLn "FLG"
+  -- NByteString flgBS <- sendCommand disp FLG (NByteString mempty)
+  -- print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack flgBS
 
   putStrLn "PON"
   _ <- sendCommand disp PON $ NByteString ByteString.empty
-  threadDelay 200_000
+  -- threadDelay 200_000
 
   putStrLn "DRF"
   _ <- sendCommand disp DRF $ NByteString ByteString.empty
-  threadDelay 32_000_000
+  -- threadDelay 32_000_000
 
   putStrLn "POF"
   _ <- sendCommand disp POF $ NByteString ByteString.empty
-  threadDelay 200_000
+  -- threadDelay 200_000
 
   pure ()
 
@@ -218,8 +226,15 @@ loadImageAsPixelByteString = do
     SV.iforM_ (imageData img) \ix p -> do
       let targetIx = (imgLen - ix) - 1
       let s = if odd ix then 4 else 0
-          v = colorWord8 $ if dist minBound p > dist maxBound p then White else Black
-      MV.modify mv (.|. (v `shiftL` s)) (targetIx `div` 2)
+          cm = Map.fromList
+            [ (32, Green)
+            -- , (64, Orange)
+            , (96, Yellow)
+            , (128, White)
+            ]
+          (_, v) = fromMaybe (0, Black) $ Map.lookupLE p cm
+
+      MV.modify mv (.|. (colorWord8 v `shiftL` s)) (targetIx `div` 2)
     V.freeze mv
 
 dist :: Word8 -> Word8 -> Word8
@@ -448,7 +463,7 @@ sendCommand d (_c :: UC8159Command n w r) (NByteString i) = do
 
   ret <- NByteString <$> SPI.readBytes (fromIntegral r) (spiBus d)
 
-  waitUntilNotBusy d
+  -- waitUntilNotBusy d
 
   setValue (csLine d) High >>= either throwIO pure
 
@@ -487,7 +502,11 @@ fromVector p v = do
 waitUntilNotBusy :: Display -> IO ()
 waitUntilNotBusy d = do
   yield
-  atomically do
-    busyState d >>= \case
-      True -> retry
-      False -> pure ()
+  getValue (busyLine d) >>= \case
+    Left err -> throwIO err
+    Right High -> pure ()
+    Right Low ->
+      atomically do
+        busyState d >>= \case
+          True -> retry
+          False -> pure ()

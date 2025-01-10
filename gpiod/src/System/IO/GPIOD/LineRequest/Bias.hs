@@ -1,7 +1,7 @@
 module System.IO.GPIOD.LineRequest.Bias where
 
 import Data.Bits
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 data Bias
   = Disable

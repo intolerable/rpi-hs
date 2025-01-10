@@ -1,6 +1,7 @@
 module System.IO.GPIOD.ReservedLine
   ( ReservedLine(..)
-  , getValue
+  , InputLine(..)
+  , OutputLine(..)
   , setValue
   , EventHandler
   , unregisterEventHandler
@@ -30,7 +31,7 @@ import System.IO.GPIOD.Line (Line, ActiveState(..))
 import System.IO.GPIOD.LineEvent
 import System.IO.GPIOD.Error
 import System.IO.GPIOD.LineRequest.RequestType
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 data ReservedLine (rt :: RequestType) =
   ReservedLine (ForeignPtr LibGPIOD.GPIODLine) Line
@@ -38,13 +39,31 @@ data ReservedLine (rt :: RequestType) =
 withReservedLinePtr :: ReservedLine rt -> (Ptr LibGPIOD.GPIODLine -> IO a) -> IO a
 withReservedLinePtr (ReservedLine fptr _l) f = withForeignPtr fptr f
 
-getValue :: ReservedLine rt -> IO (Either (GPIODError '[]) ActiveState)
-getValue rl = withReservedLinePtr rl $ \ptr ->
+class InputLine rt where
+  getValue :: ReservedLine rt -> IO (Either (GPIODError '[]) ActiveState)
+
+instance InputLine 'Input where
+  getValue = unsafeGetValue
+
+instance InputLine ('Events e) where
+  getValue = unsafeGetValue
+
+class OutputLine rt where
+  setValue :: ReservedLine rt -> ActiveState -> IO (Either (GPIODError '[LineOperationNotPermitted]) ())
+
+instance OutputLine 'Output where
+  setValue = unsafeSetValue
+
+unsafeGetValue :: ReservedLine rt
+               -> IO (Either (GPIODError '[]) ActiveState)
+unsafeGetValue rl = withReservedLinePtr rl $ \ptr ->
   fromCIntIO "getValue" (LibGPIOD.gpiod_line_get_value ptr) $ \cint ->
     pure $ if cint `testBit` 0 then High else Low
 
-setValue :: ReservedLine 'Output -> ActiveState -> IO (Either (GPIODError '[LineOperationNotPermitted]) ())
-setValue rl as = withReservedLinePtr rl $ \ptr -> do
+unsafeSetValue :: ReservedLine rt
+               -> ActiveState
+               -> IO (Either (GPIODError '[LineOperationNotPermitted]) ())
+unsafeSetValue rl as = withReservedLinePtr rl $ \ptr -> do
   let v = case as of
         High -> 1
         Low -> 0

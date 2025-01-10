@@ -1,4 +1,4 @@
-module SPIDev
+module System.IO.SPIDev.Raw
   ( SPIMode(..)
   , pattern SPI_CPHA
   , pattern SPI_CPOL
@@ -37,7 +37,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import GHC.TypeLits
 
-import qualified IOCtl.Raw as IOCtl
+import qualified System.IO.IOCtl.Raw as IOCtl
 
 #include "linux/spi/spidev.h"
 

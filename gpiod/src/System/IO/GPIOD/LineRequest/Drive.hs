@@ -2,7 +2,7 @@ module System.IO.GPIOD.LineRequest.Drive where
 
 import Data.Bits
 
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 data Drive
   = PushPull

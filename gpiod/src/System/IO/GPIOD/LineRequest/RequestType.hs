@@ -4,7 +4,7 @@ module System.IO.GPIOD.LineRequest.RequestType where
 import Data.Proxy
 
 import System.IO.GPIOD.LineRequest.EdgeDetection
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 data RequestType
   = Input

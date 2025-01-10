@@ -2,7 +2,7 @@ module Main where
 
 import Test.Hspec
 
-import qualified SPIDevSpec
+import qualified System.IO.SPIDevSpec
 
 main :: IO ()
 main = hspec spec
@@ -10,4 +10,4 @@ main = hspec spec
 spec :: Spec
 spec = do
 
-  describe "SPIDev" SPIDevSpec.spec
+  describe "SPIDev" System.IO.SPIDevSpec.spec

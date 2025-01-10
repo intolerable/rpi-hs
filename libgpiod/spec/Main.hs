@@ -3,7 +3,7 @@ module Main where
 import Foreign.C
 import Foreign.C.ConstPtr
 
-import LibGPIOD
+import System.IO.LibGPIOD
 
 main :: IO ()
 main = do

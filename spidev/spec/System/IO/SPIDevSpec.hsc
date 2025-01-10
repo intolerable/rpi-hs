@@ -1,9 +1,9 @@
-module SPIDevSpec where
+module System.IO.SPIDevSpec where
 
 import Control.Monad
 import Test.Hspec
 
-import SPIDev
+import System.IO.SPIDev.Raw
 
 #include "linux/spi/spidev.h"
 

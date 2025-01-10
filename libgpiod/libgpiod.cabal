@@ -21,12 +21,12 @@ library
   import: language
 
   exposed-modules:
-    LibGPIOD
+    System.IO.LibGPIOD
   build-depends:
-    base >= 4.14 && < 5,
+    base >=4.16 && <5,
     clock,
   pkgconfig-depends:
-    libgpiod >= 1.6 && < 2,
+    libgpiod >=1.6 && <2,
   hs-source-dirs: src
 
 test-suite libgpiod-spec

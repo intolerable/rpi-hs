@@ -19,7 +19,7 @@ import Foreign.ForeignPtr
 import Control.Exception
 
 import System.IO.GPIOD.Error
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 newtype Chip = Chip (ForeignPtr LibGPIOD.GPIODChip)
 

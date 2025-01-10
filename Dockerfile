@@ -5,11 +5,12 @@ RUN apt update -y && apt install -y --no-install-recommends \
   ca-certificates \
   curl \
   device-tree-compiler \
+  kmod \
   libgmp-dev \
   libgpiod-dev \
   locales \
-  kmod \
-  pkg-config
+  pkg-config \
+  zlib1g-dev
 
 ARG ARCH=aarch64
 

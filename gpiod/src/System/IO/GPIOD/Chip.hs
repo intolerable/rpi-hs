@@ -16,7 +16,7 @@ import qualified Streaming.Prelude as S
 
 import System.IO.GPIOD.Chip.Internal
 import System.IO.GPIOD.Error
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 lookupChipByName :: Text -> IO (Either (GPIODError '[]) (Maybe Chip))
 lookupChipByName t =

@@ -1,5 +1,5 @@
-module LibGPIOD
-  ( module LibGPIOD
+module System.IO.LibGPIOD
+  ( module System.IO.LibGPIOD
   ) where
 
 import Data.Bits

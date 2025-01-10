@@ -1,4 +1,4 @@
-module IOCtl.Raw
+module System.IO.IOCtl.Raw
   ( pattern IOC_NRBITS
   , pattern IOC_TYPEBITS
   , pattern IOC_SIZEBITS
@@ -19,7 +19,6 @@ module IOCtl.Raw
   , pattern IOR
   , pattern IOW
   , pattern IOWR
-  , module IOCtl.Raw
   ) where
 
 import Data.Bits

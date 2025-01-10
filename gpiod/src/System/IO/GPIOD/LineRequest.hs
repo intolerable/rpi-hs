@@ -37,7 +37,7 @@ import System.IO.GPIOD.LineRequest.Drive
 import System.IO.GPIOD.LineRequest.EdgeDetection
 import System.IO.GPIOD.LineRequest.RequestType
 import System.IO.GPIOD.ReservedLine (ReservedLine(..))
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 withReservedLine :: KnownRequestType rt
                  => Line

@@ -24,9 +24,9 @@ library
   import: language
 
   exposed-modules:
-    IOCtl.Raw
+    System.IO.IOCtl.Raw
   build-depends:
-    base >= 4.14 && < 5,
+    base >=4.16 && <5,
   hs-source-dirs: src
 
 test-suite ioctl-spec
@@ -37,7 +37,7 @@ test-suite ioctl-spec
   hs-source-dirs: spec
   main-is: Main.hs
   other-modules:
-    IOCtl.RawSpec
+    System.IO.IOCtl.RawSpec
   build-tool-depends: hspec-discover:hspec-discover
   build-depends:
     base,

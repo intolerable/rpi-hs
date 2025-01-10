@@ -2,7 +2,7 @@ module System.IO.GPIOD.LineEvent where
 
 import System.Clock (TimeSpec)
 
-import qualified LibGPIOD
+import qualified System.IO.LibGPIOD as LibGPIOD
 
 data EventType
   = RisingEdge
