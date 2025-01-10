@@ -1,7 +1,6 @@
 module Main where
 
 import Data.Maybe
-import Data.Semigroup (Arg(..), Min(..))
 import Codec.Picture
 import Codec.Picture.Types
 import Control.Concurrent
@@ -29,18 +28,16 @@ import qualified Data.Vector as V
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Mutable as MV
 import qualified Data.Vector.Storable as SV
-import qualified GHC.IO.FD as FD
 import qualified Data.Map.Strict as Map
 
 import BitVec
-import SPI (SPI)
 import System.IO.GPIOD.Chip
 import System.IO.GPIOD.Line (Line, lookupChipLineByNumber, lookupChipLineByName)
 import System.IO.GPIOD.LineEvent (LineEvent)
 import System.IO.GPIOD.LineRequest
 import System.IO.GPIOD.ReservedLine
-import qualified SPI
 import qualified System.IO.GPIOD.LineEvent as LineEvent
+import qualified System.IO.SPIDev as SPI
 
 main :: IO ()
 main = do
@@ -62,15 +59,13 @@ main = do
       withReservedLineFail dataCommandL dataCommandRequest $ \dataCommand ->
         withReservedLineFail csL csRequest $ \cs -> do
           withSpidev $ \spi -> do
-            -- set NO_CS mode to False
-            SPI.setNoCS False spi
+            -- set NO_CS mode to False and THREE_WIRE to True
+            SPI.modifyMode (\m -> m { SPI.noCS = False, SPI.threeWire = True}) spi >>= either throwIO pure
 
             -- set MAX_SPEED_HZ to 3000000
-            SPI.setMaxClockHz 3_000_000 spi
+            SPI.setMaxSpeedHz (SPI.MaxSpeedHz 3_000_000) spi >>= either throwIO pure
 
-            SPI.setThreeWire True spi
-
-            SPI.getSPIMode spi >>= print
+            SPI.getMode spi >>= either throwIO print
 
             (eh, isBusy, mkTChan) <- newBusyBroadcastTChan busy
             tchan <- atomically mkTChan
@@ -328,12 +323,10 @@ buttonRequest :: LineRequest ('Events 'BothEdges)
 buttonRequest = eventsRequest "gpiod-example"
   & setBias (Just PullUp)
 
-withSpidev :: (SPI -> IO a) -> IO a
-withSpidev f =
-  bracket
-    (FD.openFileWith "/dev/spidev0.0" ReadWriteMode True (\fd _ -> pure fd) (\_ fd -> pure fd))
-    FD.release
-    (\fd -> SPI.mkSPI fd >>= f)
+withSpidev :: (SPI.Bus -> IO a) -> IO a
+withSpidev f = do
+  r <- SPI.withBus "/dev/spidev0.0" f
+  either (error . show) pure r
 
 data Display = Display
   { resetLine :: ReservedLine 'Output
@@ -342,7 +335,7 @@ data Display = Display
   , busyState :: STM Bool
   , dataCommandLine :: ReservedLine 'Output
   , csLine :: ReservedLine 'Output
-  , spiBus :: SPI
+  , spiBus :: SPI.Bus
   }
 
 data Color
@@ -456,12 +449,13 @@ sendCommand d (_c :: UC8159Command n w r) (NByteString i) = do
   waitUntilNotBusy d
 
   setValue (dataCommandLine d) Low >>= either throwIO pure
-  SPI.writeByte n (spiBus d)
+  SPI.writeBytes (ByteString.singleton n) (spiBus d) >>= either throwIO pure
 
   setValue (dataCommandLine d) High >>= either throwIO pure
   goWrite i
 
-  ret <- NByteString <$> SPI.readBytes (fromIntegral r) (spiBus d)
+  ret <- fmap NByteString $
+    SPI.readBytes (fromIntegral r) (spiBus d) >>= either throwIO pure
 
   -- waitUntilNotBusy d
 
@@ -474,7 +468,7 @@ sendCommand d (_c :: UC8159Command n w r) (NByteString i) = do
           then pure ()
           else do
             let (h, t) = ByteString.splitAt 512 b
-            SPI.writeBytes h (spiBus d)
+            SPI.writeBytes h (spiBus d) >>= either throwIO pure
             goWrite t
 
 word8NatVal :: (KnownNat n, CmpNat n 256 ~ LT) => Proxy n -> Word8

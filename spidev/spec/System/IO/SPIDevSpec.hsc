@@ -2,8 +2,11 @@ module System.IO.SPIDevSpec where
 
 import Control.Monad
 import Test.Hspec
+import Test.Hspec.Hedgehog
+import qualified Hedgehog.Gen as Gen
+import qualified Hedgehog.Range as Range
 
-import System.IO.SPIDev.Raw
+import System.IO.SPIDev
 
 #include "linux/spi/spidev.h"
 
@@ -16,7 +19,8 @@ spec = do
   describe "spiMessageSize" $ do
 
     it "matches SPI_MSGSIZE" $ do
-      let sizes =
+      let sizes :: [(Integer, Integer)]
+          sizes =
             [ (1, #{const SPI_MSGSIZE(1)})
             , (2, #{const SPI_MSGSIZE(2)})
             , (3, #{const SPI_MSGSIZE(3)})
@@ -33,3 +37,9 @@ spec = do
         spiMessageSize i `shouldBe` Just (fromIntegral s)
 
       spiMessageSize 8192 `shouldBe` Nothing
+
+  describe "Mode" $ do
+
+    specify "modeWord8 (word8Mode w) == w" $ hedgehog $ do
+      w <- forAll $ Gen.integral Range.linearBounded
+      modeWord8 (word8Mode w) === w

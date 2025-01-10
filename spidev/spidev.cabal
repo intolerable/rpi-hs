@@ -3,7 +3,9 @@ name: spidev
 version: 0.1.0
 license: NONE
 build-type: Simple
-extra-doc-files: CHANGELOG.md
+extra-doc-files:
+  CHANGELOG.md
+  README.md
 
 common warnings
   ghc-options: -Wall -Wextra -Wcompat
@@ -23,11 +25,15 @@ library
   import: warnings
   import: language
 
+  includes:
+    linux/spi/spidev.h
+    sys/ioctl.h
   exposed-modules:
     System.IO.SPIDev
     System.IO.SPIDev.Raw
   build-depends:
     base >= 4.14 && < 5,
+    bytestring,
     ioctl-raw,
   hs-source-dirs: src
 
@@ -44,4 +50,6 @@ test-suite spidev-spec
   build-depends:
     base,
     spidev,
+    hedgehog,
     hspec,
+    hspec-hedgehog,

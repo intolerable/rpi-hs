@@ -67,7 +67,6 @@ executable gpiod-example
   main-is: Main.hs
   other-modules:
     BitVec
-    SPI
   ghc-options: -threaded -rtsopts
   default-extensions:
     BinaryLiterals

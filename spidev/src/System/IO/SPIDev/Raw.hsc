@@ -13,10 +13,9 @@ module System.IO.SPIDev.Raw
   , pattern SPI_NO_CS
   , pattern SPI_READY
   , pattern SPI_IOC_MAGIC
-  , spiMessageSize
+  , pattern IOC_SIZEBITS
   , SPIIOCTransfer(..)
-  , SPIIOCMessage(..)
-  , mkSPIIOCMessage
+  , SPIIOCCommand(..)
   , pattern SPI_IOC_RD_MODE
   , pattern SPI_IOC_WR_MODE
   , pattern SPI_IOC_RD_LSB_FIRST
@@ -86,12 +85,6 @@ pattern SPI_IOC_MAGIC = #{const SPI_IOC_MAGIC}
 pattern IOC_SIZEBITS :: CSize
 pattern IOC_SIZEBITS = #{const _IOC_SIZEBITS}
 
-spiMessageSize :: Integer -> Maybe Integer
-spiMessageSize n = do
-  let transferSize = n * fromIntegral (sizeOf (undefined :: SPIIOCTransfer))
-  guard $ transferSize < (1 `shiftL` fromIntegral IOC_SIZEBITS)
-  pure transferSize
-
 data SPIIOCTransfer = SPIIOCTransfer
   { txBuf :: Word64
   , rxBuf :: Word64
@@ -139,24 +132,6 @@ instance Storable SPIIOCTransfer where
 
 newtype SPIIOCCommand = SPIIOCCommand CULong
   deriving (Eq, Ord)
-
-newtype SPIIOCMessage (n :: Nat) = SPIIOCMessage SPIIOCCommand
-  deriving (Eq, Ord)
-
--- class (KnownNat n, CmpNat n 512 ~ LT) => SPIIOCMessageSize n where
--- instance (KnownNat n, CmpNat n 512 ~ LT) => SPIIOCMessageSize n where
-
-mkSPIIOCMessage :: (KnownNat n, CmpNat n 512 ~ LT)
-                => Proxy n -> SPIIOCMessage n
-mkSPIIOCMessage p = do
-  let CUChar magicW8 = SPI_IOC_MAGIC
-  SPIIOCMessage $ SPIIOCCommand $
-    IOCtl.IOW magicW8 0 (fromIntegral $ spiMessageSize' p)
-
-spiMessageSize' :: (KnownNat n, CmpNat n 512 ~ LT)
-                => Proxy n -> Integer
-spiMessageSize' n =
-  natVal n * fromIntegral (sizeOf (undefined :: SPIIOCTransfer))
 
 pattern SPI_IOC_RD_MODE :: SPIIOCCommand
 pattern SPI_IOC_RD_MODE = SPIIOCCommand #{const SPI_IOC_RD_MODE}

@@ -3,7 +3,9 @@ name: ioctl-raw
 version: 0.1.0
 license: NONE
 build-type: Simple
-extra-doc-files: CHANGELOG.md
+extra-doc-files:
+  CHANGELOG.md
+  README.md
 
 common warnings
   ghc-options: -Wall -Wextra -Wcompat
@@ -23,6 +25,8 @@ library
   import: warnings
   import: language
 
+  includes:
+    sys/ioctl.h
   exposed-modules:
     System.IO.IOCtl.Raw
   build-depends:
