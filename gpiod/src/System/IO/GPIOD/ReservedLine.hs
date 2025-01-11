@@ -2,7 +2,6 @@ module System.IO.GPIOD.ReservedLine
   ( ReservedLine(..)
   , InputLine(..)
   , OutputLine(..)
-  , setValue
   , EventHandler
   , unregisterEventHandler
   , eventHandlerHasPendingEvents
