@@ -106,14 +106,12 @@ mainLoop disp = do
 
   let dig2char d = chr (ord '0' + fromIntegral d)
 
-  putStrLn "TRES"
   _ <- sendCommand disp TRES $
     NByteString $ ByteString.Lazy.toStrict $ Builder.toLazyByteString $ mconcat
       [ Builder.word16BE (fst resolution)
       , Builder.word16BE (snd resolution)
       ]
 
-  putStrLn "PSR"
   _ <- sendCommand disp PSR do
     let b1 =
           fromWord @2 0b10
@@ -125,7 +123,6 @@ mainLoop disp = do
             `append` fromBool True -- Reset mode -- soft: 0, hard: 1
     NByteString $ ByteString.pack [bitVecWord8 b1, 0x08]
 
-  putStrLn "PWR"
   _ <- sendCommand disp PWR do
     let b1 =
           fromBool True
@@ -140,18 +137,14 @@ mainLoop disp = do
         b4 = 0x23 -- 10V
     NByteString $ ByteString.pack [bitVecWord8 b1, bitVecWord8 b2, b3, b4]
 
-  putStrLn "PLL"
   _ <- sendCommand disp PLL $
     NByteString $ ByteString.singleton $ bitVecWord8 $ fromWord @3 7 `append` fromWord @3 4
 
-  putStrLn "TSE"
   _ <- sendCommand disp TSE $ NByteString $ ByteString.singleton 0
 
-  putStrLn "TSR"
   NByteString tsrBS <- sendCommand disp TSR (NByteString mempty)
   print $ ByteString.unpack tsrBS
 
-  putStrLn "CDI"
   _ <- sendCommand disp CDI do
     let b1 =
           fromWord8 @3 (colorWord8 White)
@@ -159,28 +152,22 @@ mainLoop disp = do
             `append` fromWord @4 0b0111
     NByteString $ ByteString.singleton $ bitVecWord8 b1
 
-  putStrLn "TCON"
   _ <- sendCommand disp TCON $
     NByteString $ ByteString.singleton $ bitVecWord8 $ fromWord @4 0b0010 `append` fromWord @4 0b0010
 
-  putStrLn "DAM"
   _ <- sendCommand disp DAM $ NByteString $ ByteString.singleton 0
 
-  putStrLn "PWS"
   _ <- sendCommand disp PWS $ NByteString $ ByteString.singleton 0xAA --0b10101010
 
-  putStrLn "PFS"
   _ <- sendCommand disp PFS $ NByteString $ ByteString.singleton 0
 
-  putStrLn "DTM1"
-  _ <- sendCommand disp DTM1 $ NByteString @143360 $ do
+  _ <- sendCommand disp DTM1 $ NByteString @143_360 $ do
     let l = ByteString.length pixelBS
         diff = 143_360 - l
     pixelBS <> ByteString.replicate diff 0
   -- _ <- sendCommand disp DTM1 $ NByteString @128000 $ ByteString.replicate 128000 0b00010001
   -- threadDelay 1_000_000
 
-  putStrLn "DSP"
   NByteString dspBS <- sendCommand disp DSP (NByteString mempty)
   print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack dspBS
 
@@ -191,15 +178,12 @@ mainLoop disp = do
   -- NByteString flgBS <- sendCommand disp FLG (NByteString mempty)
   -- print $ fmap (\w -> showIntAtBase 2 dig2char w "") $ ByteString.unpack flgBS
 
-  putStrLn "PON"
   _ <- sendCommand disp PON $ NByteString ByteString.empty
   -- threadDelay 200_000
 
-  putStrLn "DRF"
   _ <- sendCommand disp DRF $ NByteString ByteString.empty
   -- threadDelay 32_000_000
 
-  putStrLn "POF"
   _ <- sendCommand disp POF $ NByteString ByteString.empty
   -- threadDelay 200_000
 
@@ -368,7 +352,7 @@ newBusyBroadcastTChan rl = do
   tvar <- newTVarIO initialValue
   let write = do
         either throwIO $ \e -> do
-          putStrLn $ "busy: " <> show (LineEvent.eventType e)
+          -- putStrLn $ "busy: " <> show (LineEvent.eventType e)
           atomically do
             writeTChan tchan e
             writeTVar tvar $ case LineEvent.eventType e of
@@ -405,6 +389,8 @@ data UC8159Command (b :: Nat) (w :: Nat) (r :: Nat) where
   FLG  :: UC8159Command 0x71 0 1
   PWS  :: UC8159Command 0xE3 1 0
 
+deriving instance Show (UC8159Command b w r)
+
 -- UC8159_PSR = 0x00
 -- UC8159_PWR = 0x01
 -- UC8159_POF = 0x02
@@ -439,7 +425,7 @@ sendCommand :: (KnownNat n, CmpNat n 256 ~ LT, KnownNat w, KnownNat r)
             -> UC8159Command n w r
             -> NByteString w
             -> IO (NByteString r)
-sendCommand d (_c :: UC8159Command n w r) (NByteString i) = do
+sendCommand d (c :: UC8159Command n w r) (NByteString i) = do
   let n = word8NatVal (Proxy :: Proxy n)
       -- w = natVal (Proxy :: Proxy w)
       r = natVal (Proxy :: Proxy r)
@@ -447,6 +433,12 @@ sendCommand d (_c :: UC8159Command n w r) (NByteString i) = do
   setValue (csLine d) Low >>= either throwIO pure
 
   waitUntilNotBusy d
+
+  let dig2char dig = chr (ord '0' + fromIntegral dig)
+      byteStringBits s =
+        fmap (\w -> "0b" <> showIntAtBase 2 dig2char w "") $ ByteString.unpack s
+
+  print (show c, byteStringBits $ ByteString.take 10 i)
 
   setValue (dataCommandLine d) Low >>= either throwIO pure
   SPI.writeBytes (ByteString.singleton n) (spiBus d) >>= either throwIO pure
