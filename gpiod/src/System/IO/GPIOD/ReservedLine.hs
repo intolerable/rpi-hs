@@ -99,11 +99,15 @@ watchLineEvents f (ReservedLine rl _) = do
     pure $ EventHandler rl a tvar
 
 threadWaitLoop :: TVar Bool -> FD -> IO () -> IO ()
-threadWaitLoop tvar fd f = forever $ do
+threadWaitLoop tvar fd f = do
   isReady <- Device.ready fd False 0
-  unless isReady $ do
-    atomically $ writeTVar tvar False
-    threadWaitRead $ fromIntegral $ fdFD fd
-    atomically $ writeTVar tvar True
-  f
+  if isReady
+    then do
+      f
+      threadWaitLoop tvar fd f
+    else do
+      atomically $ writeTVar tvar False
+      threadWaitRead $ fromIntegral $ fdFD fd
+      atomically $ writeTVar tvar True
+      threadWaitLoop tvar fd f
 
