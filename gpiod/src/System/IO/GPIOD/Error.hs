@@ -52,6 +52,18 @@ instance {-# OVERLAPPING #-} IntoError e (e ': es) where
 instance {-# OVERLAPPABLE #-} IntoError e xs => IntoError e (x ': xs) where
   gpiodError e = shiftGPIODError (gpiodError e)
 
+class AllIntoError from into where
+  allIntoError :: GPIODError from -> GPIODError into
+
+instance AllIntoError '[] into where
+  allIntoError (UnknownError ioe) = UnknownError ioe
+
+instance (IntoError f into, AllIntoError fs into) => AllIntoError (f ': fs) into where
+  allIntoError = \case
+    KnownError (OneOf (Z (Identity e))) -> gpiodError e
+    KnownError (OneOf (S rest)) -> allIntoError $ KnownError $ OneOf rest
+    UnknownError ioe -> UnknownError ioe
+
 class LookupErrno e where
   fromErrnoMaybe :: Errno -> Maybe e
 
